@@ -128,7 +128,7 @@ do
 	fi
 done
 
-# remove test.txt after running all testcases
+# remove test.types after running all testcases
 rm test.types
 
 
