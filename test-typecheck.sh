@@ -2,6 +2,7 @@
 
 # Michael Gleason
 # COP 3402 Spring 2019
+# Inspired by Sean Szumlanski
 
 # ==================
 # Typechecker: test-typecheck.sh
