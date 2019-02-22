@@ -105,7 +105,7 @@ do
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
 	# Attempt compilation and check for failure
-	./compiler --lex $i > test.txt 2> /dev/null
+	./compiler --lex $i > test.tokens 2> /dev/null
 	compile_val=$?
 	if [ $compile_val != 0 ]; then
 		echo "fail (failed to compile)"
@@ -116,7 +116,7 @@ do
 	sample_file="${filename%.*}"
 
 	# Run diff and capture return val
-	diff test.txt ../syllabus/project/tests/$sample_file.tokens > /dev/null
+	diff test.tokens ../syllabus/project/tests/$sample_file.tokens > /dev/null
 	diff_val=$?
 	if [ $diff_val != 0 ]; then
 		echo "fail (output mismatch)"
@@ -126,8 +126,8 @@ do
 	fi
 done
 
-# remove test.txt after running all testcases
-rm test.txt
+# remove test.tokens after running all testcases
+rm test.tokens
 
 
 ################################################################################
