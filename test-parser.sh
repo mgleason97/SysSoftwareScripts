@@ -60,25 +60,25 @@ if [ ! -f Makefile ]; then
 	echo " Error: You seem to be in the wrong directory. Make sure this script"
 	echo "        is in your \"project-<username>\" directory. (Aborting script)"
 	echo ""
-	exit
+	exit 2
 elif [ ! -d ../syllabus ]; then
 	echo ""
 	echo " Error: You must place your project-<username> and syllabus directories"
 	echo "        in the same directory before we can proceed. (Aborting script)"
 	echo ""
-	exit
+	exit 2
 elif [ ! -d ../syllabus/project ]; then
 	echo ""
 	echo " Error: Your project folder is not in your syllabus folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
-	exit
+	exit 2
 elif [ ! -d ../syllabus/project/tests ]; then
 	echo ""
 	echo " Error: Your tests folder is not in your project folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
-	exit
+	exit 2
 fi
 
 
@@ -197,4 +197,5 @@ else
 	echo "  Looks like you're failing at least one testcase. Keep up the hard work"
 	echo "  and refer to syllabus/project/overview.md for instructions."
 	echo ""
+	echo 1
 fi

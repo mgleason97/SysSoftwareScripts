@@ -60,25 +60,25 @@ if [ ! -f Makefile ]; then
 	echo " Error: You seem to be in the wrong directory. Make sure this script"
 	echo "        is in your \"project-<username>\" directory. (Aborting script)"
 	echo ""
-	exit
+	exit 2
 elif [ ! -d ../syllabus ]; then
 	echo ""
 	echo " Error: You must place your project-<username> and syllabus directories"
 	echo "        in the same directory before we can proceed. (Aborting script)"
 	echo ""
-	exit
+	exit 2
 elif [ ! -d ../syllabus/project ]; then
 	echo ""
 	echo " Error: Your project folder is not in your syllabus folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
-	exit
+	exit 2
 elif [ ! -d ../syllabus/project/tests ]; then
 	echo ""
 	echo " Error: Your tests folder is not in your project folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
-	exit
+	exit 2
 fi
 
 ################################################################################
@@ -116,7 +116,7 @@ do
 	
 	# Program didn't compile and resulting files are different
 	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
-		echo "fail (false error or bad tree)"
+		echo "fail (output mismatch)"
 	# Program didn't compile, but proper error message was outputted
 	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
 		echo "PASS! (caught error)"
@@ -202,4 +202,5 @@ else
 	echo "  is going wrong. Instructions for compilation can be found in"
 	echo "  the overview.md file. Keep up the hard work!"
 	echo ""
+	exit 1
 fi
