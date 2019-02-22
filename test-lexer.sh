@@ -52,6 +52,37 @@ col=27
 
 
 ################################################################################
+# Check that all required files are present.
+################################################################################
+
+if [ ! -f Makefile ]; then
+	echo ""
+	echo " Error: You seem to be in the wrong directory. Make sure this script"
+	echo "        is in your \"project-<username>\" directory. (Aborting script)"
+	echo ""
+	exit
+elif [ ! -d ../syllabus ]; then
+	echo ""
+	echo " Error: You must place your project-<username> and syllabus directories"
+	echo "        in the same directory before we can proceed. (Aborting script)"
+	echo ""
+	exit
+elif [ ! -d ../syllabus/project ]; then
+	echo ""
+	echo " Error: Your project folder is not in your syllabus folder. Why would"
+	echo "        you move such sensitive things? SHAME! (Aborting script)"
+	echo ""
+	exit
+elif [ ! -d ../syllabus/project/tests ]; then
+	echo ""
+	echo " Error: Your tests folder is not in your project folder. Why would"
+	echo "        you move such sensitive things? SHAME! (Aborting script)"
+	echo ""
+	exit
+fi
+
+
+################################################################################
 # Compile and run test cases.
 ################################################################################
 
