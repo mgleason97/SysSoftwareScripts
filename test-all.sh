@@ -46,11 +46,12 @@ fi
 
 PASS_CNT=0
 NUM_TEST_CASES=3
+SCRIPTS=(lexer parser typecheck)
 
 # used for right-alignment
 col=27
 
-SCRIPTS=(lexer parser typecheck)
+
 ################################################################################
 # Check that all required files are present.
 ################################################################################
@@ -114,43 +115,6 @@ for i in ${SCRIPTS[@]}; do
 	fi
 	
 done
-
-# Test for every .pl0 extension in the tests directory
-#for i in ../syllabus/project/tests/*.pl0;
-#do
-#	[ -f "$i" ] || break
-
-	# Extract filename from path and print
-#	filename=$(basename -- "$i")
-#	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
-
-	# Attempt compilation and store compilation val
-#	./compiler --typecheck $i > test.types 2> test.types
-#	compile_val=$?
-
-	# Remove extension from filename
-#	sample_file="${filename%.*}"
-
-	# Run diff and capture return val
-#	diff test.types ../syllabus/project/tests/$sample_file.types > /dev/null
-#	diff_val=$?
-	
-	# Program didn't compile and resulting files are different
-#	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
-#		echo "fail (false error or bad tree)"
-	# Program didn't compile, but proper error message was outputted
-#	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
-#		echo "PASS! (caught error)"
-#		PASS_CNT=`expr $PASS_CNT + 1`
-	# Program compiles and .types files match
-#	else
-#		echo "PASS!"
-#		PASS_CNT=`expr $PASS_CNT + 1`
-#	fi
-#done
-
-# remove test.types after running all testcases
-#rm test.types
 
 
 ################################################################################
