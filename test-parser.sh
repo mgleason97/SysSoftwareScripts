@@ -197,5 +197,5 @@ else
 	echo "  Looks like you're failing at least one testcase. Keep up the hard work"
 	echo "  and refer to syllabus/project/overview.md for instructions."
 	echo ""
-	echo 1
+	exit 1
 fi
