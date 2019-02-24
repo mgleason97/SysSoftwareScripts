@@ -1,6 +1,5 @@
 # APIs
-You can find all of the functions and structs listed in each of the support
-files listed below
+Use this to find which file a function or struct is written in.
 
 ## AST
 
