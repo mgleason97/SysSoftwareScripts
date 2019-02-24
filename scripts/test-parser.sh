@@ -45,7 +45,7 @@ fi
 ################################################################################
 
 PASS_CNT=0
-NUM_TEST_CASES=15
+NUM_TEST_CASES=29
 
 # used for right-alignment
 col=27
@@ -55,25 +55,26 @@ col=27
 # Check that all required files are present.
 ################################################################################
 
-if [ ! -f Makefile ]; then
+if [ ! -f ../Makefile ]; then
 	echo ""
-	echo " Error: You seem to be in the wrong directory. Make sure this script"
-	echo "        is in your \"project-<username>\" directory. (Aborting script)"
+	echo " Error: You seem to be in the wrong directory. Make sure the script"
+	echo "        folder is in your \"project-<username>\" directory."
+	echo "        (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus ]; then
+elif [ ! -d ../../syllabus ]; then
 	echo ""
-	echo " Error: You must place your project-<username> and syllabus directories"
+	echo " Error: You must place your \"project-<username>\" and syllabus directories"
 	echo "        in the same directory before we can proceed. (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project ]; then
+elif [ ! -d ../../syllabus/project ]; then
 	echo ""
 	echo " Error: Your project folder is not in your syllabus folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project/tests ]; then
+elif [ ! -d ../../syllabus/project/tests ]; then
 	echo ""
 	echo " Error: Your tests folder is not in your project folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
@@ -93,10 +94,21 @@ echo "==========================================================================
 echo ""
 
 # Make sure latest edit to file is being used.
-make > /dev/null
+cd ..
+make > /dev/null 2> /dev/null 
+make_res=$?
+cd scripts
+
+if [ $make_res != 0 ]; then
+	echo ""
+	echo " Error: make command was unsuccessful. Execute make for error message."
+	echo "        (Aborting script)"
+	echo ""
+	exit 3
+fi
 
 # Test for every .pl0 extension in the tests directory
-for i in ./err/*.pl0;
+for i in ../../syllabus/project/tests/*.pl0;
 do
 	[ -f "$i" ] || break
 
@@ -104,28 +116,44 @@ do
 	filename=$(basename -- "$i")
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
-	# Attempt compilation and check for failure
-	./compiler --typecheck $i > test.err 2> test.err
+	# Attempt compilation and dump output to files
+	../compiler --parse $i > test.ast 2> test.err
 	compile_val=$?
 
 	# Remove extension from filename
 	sample_file="${filename%.*}"
 
-	# Run diff and capture return val
-	diff test.err ./err/$sample_file.err > /dev/null
-	diff_val=$?
-	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
-		echo "fail (false error or bad tree)"
-	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
-		echo "PASS! (caught error)"
-		PASS_CNT=`expr $PASS_CNT + 1`
-	else
-		echo "fail (uncaught error)"
+	# Run diff with ast and capture return val
+	diff test.ast ../../syllabus/project/tests/$sample_file.ast > /dev/null
+	diff_val1=$?
+	
+	# Run diff to check for errors and capture return val
+	diff test.err ../../syllabus/project/tests/$sample_file.ast > /dev/null
+	diff_val2=$?
+	
+	# Failed to compile (crashed, wrong error, or caught error)
+	if [ $compile_val != 0 ]; then
+		if [ -s test.ast ] && [ -s test.err ]; then
+			echo "fail (program crashed)"
+		elif [ $diff_val2 != 0 ]; then
+			echo "fail (wrong error)"
+		else
+			echo "PASS! (caught error)"
+			PASS_CNT=`expr $PASS_CNT + 1`
+		fi
+	# Compiled (wrong tree or passed)
+	else 
+		if [ $diff_val1 != 0 ]; then 
+			echo "fail (bad tree)"
+		else
+			echo "PASS!"
+			PASS_CNT=`expr $PASS_CNT + 1`
+		fi
 	fi
 done
 
-# remove test.ast after running all testcases
-rm test.err
+# remove testing files after running all testcases
+rm test.ast test.err
 
 
 ################################################################################
@@ -196,5 +224,5 @@ else
 	echo "  Looks like you're failing at least one testcase. Keep up the hard work"
 	echo "  and refer to syllabus/project/overview.md for instructions."
 	echo ""
-	echo 1
+	exit 1
 fi

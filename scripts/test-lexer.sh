@@ -55,25 +55,26 @@ col=27
 # Check that all required files are present.
 ################################################################################
 
-if [ ! -f Makefile ]; then
+if [ ! -f ../Makefile ]; then
 	echo ""
-	echo " Error: You seem to be in the wrong directory. Make sure this script"
-	echo "        is in your \"project-<username>\" directory. (Aborting script)"
+	echo " Error: You seem to be in the wrong directory. Make sure the script"
+	echo "        folder is in your \"project-<username>\" directory."
+	echo "        (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus ]; then
+elif [ ! -d ../../syllabus ]; then
 	echo ""
-	echo " Error: You must place your project-<username> and syllabus directories"
+	echo " Error: You must place your \"project-<username>\" and syllabus directories"
 	echo "        in the same directory before we can proceed. (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project ]; then
+elif [ ! -d ../../syllabus/project ]; then
 	echo ""
 	echo " Error: Your project folder is not in your syllabus folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project/tests ]; then
+elif [ ! -d ../../syllabus/project/tests ]; then
 	echo ""
 	echo " Error: Your tests folder is not in your project folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
@@ -93,10 +94,21 @@ echo "==========================================================================
 echo ""
 
 # Make sure latest edit to file is being used.
-make > /dev/null
+cd ..
+make > /dev/null 2> /dev/null 
+make_res=$?
+cd scripts
+
+if [ $make_res != 0 ]; then
+	echo ""
+	echo " Error: make command was unsuccessful. Execute make for error message."
+	echo "        (Aborting script)"
+	echo ""
+	exit 3
+fi
 
 # Test for every .pl0 extension in the tests directory
-for i in ../syllabus/project/tests/*.pl0;
+for i in ../../syllabus/project/tests/*.pl0;
 do
 	[ -f "$i" ] || break
 
@@ -105,7 +117,7 @@ do
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
 	# Attempt compilation and check for failure
-	./compiler --lex $i > test.tokens 2> /dev/null
+	../compiler --lex $i > test.tokens 2> /dev/null
 	compile_val=$?
 	if [ $compile_val != 0 ]; then
 		echo "fail (failed to compile)"
@@ -116,7 +128,7 @@ do
 	sample_file="${filename%.*}"
 
 	# Run diff and capture return val
-	diff test.tokens ../syllabus/project/tests/$sample_file.tokens > /dev/null
+	diff test.tokens ../../syllabus/project/tests/$sample_file.tokens > /dev/null
 	diff_val=$?
 	if [ $diff_val != 0 ]; then
 		echo "fail (output mismatch)"

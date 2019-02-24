@@ -5,17 +5,17 @@
 # Inspired by Sean Szumlanski
 
 # ==================
-# Parser: test-parser.sh
+# TestAll: test-all.sh
 # ==================
 # Run this script from the command line like so:
 #
-# 	bash test-parser.sh
+# 	bash test-all.sh
 #
 # This script must be in your project folder, and your "syllabus"
 # and project folder must be in the same directory.
 #
-# For example, put "syllabus" and "project-<username>" on the desktop
-# and make sure this script is in "project-<username>" folder
+# For example, put "syllabus" and "project-<username>" on the desktop and
+# make sure this script is in the "project-<username>" folder
 
 ################################################################################
 # Shell check.
@@ -27,14 +27,14 @@
 
 if [ "$BASH" != "/bin/bash" ]; then
   echo ""
-  echo " Please use bash to run this script, like so: bash test-parser.sh"
+  echo " Please use bash to run this script, like so: bash test-typecheck.sh"
   echo ""
   exit
 fi
 
 if [ -z "$BASH_VERSION" ]; then
   echo ""
-  echo " Please use bash to run this script, like so: bash test-parser.sh"
+  echo " Please use bash to run this script, like so: bash test-typecheck.sh"
   echo ""
   exit
 fi
@@ -45,7 +45,8 @@ fi
 ################################################################################
 
 PASS_CNT=0
-NUM_TEST_CASES=29
+NUM_TEST_CASES=3
+SCRIPTS=(lexer parser typecheck)
 
 # used for right-alignment
 col=27
@@ -55,25 +56,26 @@ col=27
 # Check that all required files are present.
 ################################################################################
 
-if [ ! -f Makefile ]; then
+if [ ! -f ../Makefile ]; then
 	echo ""
-	echo " Error: You seem to be in the wrong directory. Make sure this script"
-	echo "        is in your \"project-<username>\" directory. (Aborting script)"
+	echo " Error: You seem to be in the wrong directory. Make sure the script"
+	echo "        folder is in your \"project-<username>\" directory."
+	echo "        (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus ]; then
+elif [ ! -d ../../syllabus ]; then
 	echo ""
-	echo " Error: You must place your project-<username> and syllabus directories"
+	echo " Error: You must place your \"project-<username>\" and syllabus directories"
 	echo "        in the same directory before we can proceed. (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project ]; then
+elif [ ! -d ../../syllabus/project ]; then
 	echo ""
 	echo " Error: Your project folder is not in your syllabus folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project/tests ]; then
+elif [ ! -d ../../syllabus/project/tests ]; then
 	echo ""
 	echo " Error: Your tests folder is not in your project folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
@@ -81,52 +83,42 @@ elif [ ! -d ../syllabus/project/tests ]; then
 	exit 2
 fi
 
-
 ################################################################################
 # Compile and run test cases.
 ################################################################################
 
 echo ""
 echo "============================================================================="
-echo "Running test cases..."
+echo "Running scripts..."
 echo "============================================================================="
 echo ""
 
-# Make sure latest edit to file is being used.
-make > /dev/null
-
-# Test for every .pl0 extension in the tests directory
-for i in ../syllabus/project/tests/*.pl0;
-do
-	[ -f "$i" ] || break
-
-	# Extract filename from path and print
-	filename=$(basename -- "$i")
-	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
-
-	# Attempt compilation and check for failure
-	./compiler --parse $i > test.ast 2> test.ast
+for i in ${SCRIPTS[@]}; do
+	printf '  [Script] Running test-%s.sh...\t' "$i" | expand -t $col
+	bash test-$i.sh > /dev/null
 	compile_val=$?
-
-	# Remove extension from filename
-	sample_file="${filename%.*}"
-
-	# Run diff and capture return val
-	diff test.ast ../syllabus/project/tests/$sample_file.ast > /dev/null
-	diff_val=$?
-	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
-		echo "fail (false error or bad tree)"
-	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
-		echo "PASS! (caught error)"
-		PASS_CNT=`expr $PASS_CNT + 1`
-	else
+	
+	if [ $compile_val == 3 ]; then
+		echo "fail (make failed)"
+		echo ""
+		echo " Error: make command was unsuccessful. Execute make for error message."
+		echo "        (Aborting script)"
+		echo ""
+	elif [ $compile_val == 2 ]; then
+		echo "fail (misplaced file)"
+		echo ""
+		echo " Error: test-${i}.sh failed because of a misplaced file. Try running"
+		echo "        that script separately. (Aborting)"
+		echo ""
+		exit
+	elif [ $compile_val == 1 ]; then
+		echo "fail (run script separately)"
+	else 
 		echo "PASS!"
 		PASS_CNT=`expr $PASS_CNT + 1`
 	fi
+	
 done
-
-# remove test.ast after running all testcases
-rm test.ast
 
 
 ################################################################################
@@ -194,8 +186,9 @@ else
 	echo ""
 	echo "                                 (fail whale)"
 	echo ""
-	echo "  Looks like you're failing at least one testcase. Keep up the hard work"
-	echo "  and refer to syllabus/project/overview.md for instructions."
+	echo "  Looks like you're failing at least one testcase. Compile an"
+	echo "  individual test case to get more granular details about what"
+	echo "  is going wrong. Instructions for compilation can be found in"
+	echo "  the overview.md file. Keep up the hard work!"
 	echo ""
-	exit 1
 fi

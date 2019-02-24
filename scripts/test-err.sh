@@ -5,17 +5,17 @@
 # Inspired by Sean Szumlanski
 
 # ==================
-# Typechecker: test-typecheck.sh
+# Parser: test-parser.sh
 # ==================
 # Run this script from the command line like so:
 #
-# 	bash test-typecheck.sh
+# 	bash test-parser.sh
 #
 # This script must be in your project folder, and your "syllabus"
 # and project folder must be in the same directory.
 #
-# For example, put "syllabus" and "project-<username>" on the desktop and
-# make sure this script is in the "project-<username>" folder
+# For example, put "syllabus" and "project-<username>" on the desktop
+# and make sure this script is in "project-<username>" folder
 
 ################################################################################
 # Shell check.
@@ -27,14 +27,14 @@
 
 if [ "$BASH" != "/bin/bash" ]; then
   echo ""
-  echo " Please use bash to run this script, like so: bash test-typecheck.sh"
+  echo " Please use bash to run this script, like so: bash test-parser.sh"
   echo ""
   exit
 fi
 
 if [ -z "$BASH_VERSION" ]; then
   echo ""
-  echo " Please use bash to run this script, like so: bash test-typecheck.sh"
+  echo " Please use bash to run this script, like so: bash test-parser.sh"
   echo ""
   exit
 fi
@@ -45,7 +45,7 @@ fi
 ################################################################################
 
 PASS_CNT=0
-NUM_TEST_CASES=29
+NUM_TEST_CASES=15
 
 # used for right-alignment
 col=27
@@ -55,31 +55,33 @@ col=27
 # Check that all required files are present.
 ################################################################################
 
-if [ ! -f Makefile ]; then
+if [ ! -f ../Makefile ]; then
 	echo ""
-	echo " Error: You seem to be in the wrong directory. Make sure this script"
-	echo "        is in your \"project-<username>\" directory. (Aborting script)"
+	echo " Error: You seem to be in the wrong directory. Make sure the script"
+	echo "        folder is in your \"project-<username>\" directory."
+	echo "        (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus ]; then
+elif [ ! -d ../../syllabus ]; then
 	echo ""
-	echo " Error: You must place your project-<username> and syllabus directories"
+	echo " Error: You must place your \"project-<username>\" and syllabus directories"
 	echo "        in the same directory before we can proceed. (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project ]; then
+elif [ ! -d ../../syllabus/project ]; then
 	echo ""
 	echo " Error: Your project folder is not in your syllabus folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
 	exit 2
-elif [ ! -d ../syllabus/project/tests ]; then
+elif [ ! -d ../../syllabus/project/tests ]; then
 	echo ""
 	echo " Error: Your tests folder is not in your project folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
 	exit 2
 fi
+
 
 ################################################################################
 # Compile and run test cases.
@@ -92,10 +94,21 @@ echo "==========================================================================
 echo ""
 
 # Make sure latest edit to file is being used.
-make > /dev/null
+cd ..
+make > /dev/null 2> /dev/null 
+make_res=$?
+cd scripts
+
+if [ $make_res != 0 ]; then
+	echo ""
+	echo " Error: make command was unsuccessful. Execute make for error message."
+	echo "        (Aborting script)"
+	echo ""
+	exit 3
+fi
 
 # Test for every .pl0 extension in the tests directory
-for i in ../syllabus/project/tests/*.pl0;
+for i in ../err/*.pl0;
 do
 	[ -f "$i" ] || break
 
@@ -103,33 +116,30 @@ do
 	filename=$(basename -- "$i")
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
-	# Attempt compilation and store compilation val
-	./compiler --typecheck $i > test.types 2> test.types
+	# Attempt compilation and check for failure
+	../compiler --typecheck $i > test.err 2> test.err
 	compile_val=$?
 
 	# Remove extension from filename
 	sample_file="${filename%.*}"
 
 	# Run diff and capture return val
-	diff test.types ../syllabus/project/tests/$sample_file.types > /dev/null
+	diff test.err ../err/$sample_file.err > /dev/null
 	diff_val=$?
 	
-	# Program didn't compile and resulting files are different
+	# Produce resulting messages
 	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
-		echo "fail (output mismatch)"
-	# Program didn't compile, but proper error message was outputted
+		echo "fail (false error or bad tree)"
 	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
 		echo "PASS! (caught error)"
 		PASS_CNT=`expr $PASS_CNT + 1`
-	# Program compiles and .types files match
 	else
-		echo "PASS!"
-		PASS_CNT=`expr $PASS_CNT + 1`
+		echo "fail (uncaught error)"
 	fi
 done
 
-# remove test.types after running all testcases
-rm test.types
+# remove test.err after running all testcases
+rm test.err
 
 
 ################################################################################
@@ -197,10 +207,8 @@ else
 	echo ""
 	echo "                                 (fail whale)"
 	echo ""
-	echo "  Looks like you're failing at least one testcase. Compile an"
-	echo "  individual test case to get more granular details about what"
-	echo "  is going wrong. Instructions for compilation can be found in"
-	echo "  the overview.md file. Keep up the hard work!"
+	echo "  Looks like you're failing at least one testcase. Keep up the hard work"
+	echo "  and refer to syllabus/project/overview.md for instructions."
 	echo ""
-	exit 1
+	echo 1
 fi

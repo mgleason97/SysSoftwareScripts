@@ -5,11 +5,11 @@
 # Inspired by Sean Szumlanski
 
 # ==================
-# TestAll: test-all.sh
+# Typechecker: test-typecheck.sh
 # ==================
 # Run this script from the command line like so:
 #
-# 	bash test-all.sh
+# 	bash test-typecheck.sh
 #
 # This script must be in your project folder, and your "syllabus"
 # and project folder must be in the same directory.
@@ -45,8 +45,7 @@ fi
 ################################################################################
 
 PASS_CNT=0
-NUM_TEST_CASES=3
-SCRIPTS=(lexer parser typecheck)
+NUM_TEST_CASES=29
 
 # used for right-alignment
 col=27
@@ -56,30 +55,31 @@ col=27
 # Check that all required files are present.
 ################################################################################
 
-if [ ! -f Makefile ]; then
+if [ ! -f ../Makefile ]; then
 	echo ""
-	echo " Error: You seem to be in the wrong directory. Make sure this script"
-	echo "        is in your \"project-<username>\" directory. (Aborting script)"
+	echo " Error: You seem to be in the wrong directory. Make sure the script"
+	echo "        folder is in your \"project-<username>\" directory."
+	echo "        (Aborting script)"
 	echo ""
-	exit
-elif [ ! -d ../syllabus ]; then
+	exit 2
+elif [ ! -d ../../syllabus ]; then
 	echo ""
-	echo " Error: You must place your project-<username> and syllabus directories"
+	echo " Error: You must place your \"project-<username>\" and syllabus directories"
 	echo "        in the same directory before we can proceed. (Aborting script)"
 	echo ""
-	exit
-elif [ ! -d ../syllabus/project ]; then
+	exit 2
+elif [ ! -d ../../syllabus/project ]; then
 	echo ""
 	echo " Error: Your project folder is not in your syllabus folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
-	exit
-elif [ ! -d ../syllabus/project/tests ]; then
+	exit 2
+elif [ ! -d ../../syllabus/project/tests ]; then
 	echo ""
 	echo " Error: Your tests folder is not in your project folder. Why would"
 	echo "        you move such sensitive things? SHAME! (Aborting script)"
 	echo ""
-	exit
+	exit 2
 fi
 
 ################################################################################
@@ -88,33 +88,70 @@ fi
 
 echo ""
 echo "============================================================================="
-echo "Running scripts..."
+echo "Running test cases..."
 echo "============================================================================="
 echo ""
 
 # Make sure latest edit to file is being used.
-make > /dev/null
+cd ..
+make > /dev/null 2> /dev/null 
+make_res=$?
+cd scripts
 
-for i in ${SCRIPTS[@]}; do
-	printf '  [Script] Running test-%s.sh...\t' "$i" | expand -t $col
-	bash test-$i.sh > /dev/null
+if [ $make_res != 0 ]; then
+	echo ""
+	echo " Error: make command was unsuccessful. Execute make for error message."
+	echo "        (Aborting script)"
+	echo ""
+	exit 3
+fi
+
+# Test for every .pl0 extension in the tests directory
+for i in ../../syllabus/project/tests/*.pl0;
+do
+	[ -f "$i" ] || break
+
+	# Extract filename from path and print
+	filename=$(basename -- "$i")
+	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
+
+	# Attempt compilation and store compilation val
+	../compiler --typecheck $i > test.types 2> test.err
 	compile_val=$?
+
+	# Remove extension from filename
+	sample_file="${filename%.*}"
+
+	# Run diff and capture return val
+	diff test.types ../../syllabus/project/tests/$sample_file.types > /dev/null
+	diff_val1=$?
 	
-	if [ $compile_val == 2 ]; then
-		echo "fail (misplaced file)"
-		echo ""
-		echo "  Error: test-${i}.sh failed because of a misplaced file. Try running"
-		echo "         that script separately. (Aborting)"
-		echo ""
-		exit
-	elif [ $compile_val == 1 ]; then
-		echo "fail (run script separately)"
+	diff test.err ../../syllabus/project/tests/$sample_file.types > /dev/null
+	diff_val2=$?
+	
+	# Failed to compile (crashed, wrong error, or caught error)
+	if [ $compile_val != 0 ]; then
+		if [ -s test.types ] && [ -s test.err ]; then
+			echo "fail (program crashed)"
+		elif [ $diff_val2 != 0 ]; then
+			echo "fail (wrong error)"
+		else
+			echo "PASS! (caught error)"
+			PASS_CNT=`expr $PASS_CNT + 1`
+		fi
+	# Compiled (wrong tree or passed)
 	else 
-		echo "PASS!"
-		PASS_CNT=`expr $PASS_CNT + 1`
+		if [ $diff_val1 != 0 ]; then 
+			echo "fail (bad tree)"
+		else
+			echo "PASS!"
+			PASS_CNT=`expr $PASS_CNT + 1`
+		fi
 	fi
-	
 done
+
+# remove testing files after running all testcases
+rm test.types test.err
 
 
 ################################################################################
@@ -187,4 +224,5 @@ else
 	echo "  is going wrong. Instructions for compilation can be found in"
 	echo "  the overview.md file. Keep up the hard work!"
 	echo ""
+	exit 1
 fi
