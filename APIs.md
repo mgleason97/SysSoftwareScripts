@@ -2,7 +2,7 @@
 You can find all of the functions and structs listed in each of the support
 files listed below
 
-## ast
+## AST
 
 ### ast.c
 
@@ -79,7 +79,7 @@ files listed below
     struct ExpressionListElement {};
 
 
-## datatype
+## Datatype
 
 ### datatype.c
 
@@ -104,7 +104,7 @@ files listed below
     struct DataType {};
     
 
-## parser
+## Parser
 
 ### parser.c
 
@@ -136,7 +136,7 @@ files listed below
     static bool ensure_token(enum tok_kind kind) {}
 
 
-## symtab
+## SymTab
 
 ### symtab.c
 
@@ -160,7 +160,7 @@ files listed below
     struct ScopeListElement {};
 
 
-## token
+## Token
 
 ### token.c
 
@@ -179,7 +179,7 @@ files listed below
     struct Token {};
 
 
-## typechecker
+## Typechecker
 
 ### typechecker.c
 
