@@ -93,7 +93,18 @@ echo "==========================================================================
 echo ""
 
 # Make sure latest edit to file is being used.
-cd .. && make > /dev/null && cd scripts
+cd ..
+make > /dev/null 2> /dev/null 
+make_res=$?
+cd scripts
+
+if [ $make_res != 0 ]; then
+	echo ""
+	echo " Error: make command was unsuccessful. Execute make for error message."
+	echo "        (Aborting script)"
+	echo ""
+	exit 3
+fi
 
 # Test for every .pl0 extension in the tests directory
 for i in ../../syllabus/project/tests/*.pl0;
@@ -105,7 +116,7 @@ do
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
 	# Attempt compilation and store compilation val
-	../compiler --typecheck $i > test.types 2> test.types
+	../compiler --typecheck $i > test.types 2> test.err
 	compile_val=$?
 
 	# Remove extension from filename
@@ -113,24 +124,34 @@ do
 
 	# Run diff and capture return val
 	diff test.types ../../syllabus/project/tests/$sample_file.types > /dev/null
-	diff_val=$?
+	diff_val1=$?
 	
-	# Program didn't compile and resulting files are different
-	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
-		echo "fail (output mismatch)"
-	# Program didn't compile, but proper error message was outputted
-	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
-		echo "PASS! (caught error)"
-		PASS_CNT=`expr $PASS_CNT + 1`
-	# Program compiles and .types files match
-	else
-		echo "PASS!"
-		PASS_CNT=`expr $PASS_CNT + 1`
+	diff test.err ../../syllabus/project/tests/$sample_file.types > /dev/null
+	diff_val2=$?
+	
+	# Failed to compile (crashed, wrong error, or caught error)
+	if [ $compile_val != 0 ]; then
+		if [ -s test.types ] && [ -s test.err ]; then
+			echo "fail (program crashed)"
+		elif [ $diff_val2 != 0 ]; then
+			echo "fail (wrong error)"
+		else
+			echo "PASS! (caught error)"
+			PASS_CNT=`expr $PASS_CNT + 1`
+		fi
+	# Compiled (wrong tree or passed)
+	else 
+		if [ $diff_val1 != 0 ]; then 
+			echo "fail (bad tree)"
+		else
+			echo "PASS!"
+			PASS_CNT=`expr $PASS_CNT + 1`
+		fi
 	fi
 done
 
-# remove test.types after running all testcases
-rm test.types
+# remove testing files after running all testcases
+rm test.types test.err
 
 
 ################################################################################

@@ -94,7 +94,18 @@ echo "==========================================================================
 echo ""
 
 # Make sure latest edit to file is being used.
-cd .. && make > /dev/null && cd scripts
+cd ..
+make > /dev/null 2> /dev/null 
+make_res=$?
+cd scripts
+
+if [ $make_res != 0 ]; then
+	echo ""
+	echo " Error: make command was unsuccessful. Execute make for error message."
+	echo "        (Aborting script)"
+	echo ""
+	exit 3
+fi
 
 # Test for every .pl0 extension in the tests directory
 for i in ../err/*.pl0;
@@ -115,6 +126,8 @@ do
 	# Run diff and capture return val
 	diff test.err ../err/$sample_file.err > /dev/null
 	diff_val=$?
+	
+	# Produce resulting messages
 	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
 		echo "fail (false error or bad tree)"
 	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
@@ -125,7 +138,7 @@ do
 	fi
 done
 
-# remove test.ast after running all testcases
+# remove test.err after running all testcases
 rm test.err
 
 

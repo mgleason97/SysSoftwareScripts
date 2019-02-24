@@ -93,19 +93,22 @@ echo "Running scripts..."
 echo "============================================================================="
 echo ""
 
-# Make sure latest edit to file is being used.
-cd .. && make > /dev/null && cd scripts
-
 for i in ${SCRIPTS[@]}; do
 	printf '  [Script] Running test-%s.sh...\t' "$i" | expand -t $col
 	bash test-$i.sh > /dev/null
 	compile_val=$?
 	
-	if [ $compile_val == 2 ]; then
+	if [ $compile_val == 3 ]; then
+		echo "fail (make failed)"
+		echo ""
+		echo " Error: make command was unsuccessful. Execute make for error message."
+		echo "        (Aborting script)"
+		echo ""
+	elif [ $compile_val == 2 ]; then
 		echo "fail (misplaced file)"
 		echo ""
-		echo "  Error: test-${i}.sh failed because of a misplaced file. Try running"
-		echo "         that script separately. (Aborting)"
+		echo " Error: test-${i}.sh failed because of a misplaced file. Try running"
+		echo "        that script separately. (Aborting)"
 		echo ""
 		exit
 	elif [ $compile_val == 1 ]; then

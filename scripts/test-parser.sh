@@ -94,7 +94,18 @@ echo "==========================================================================
 echo ""
 
 # Make sure latest edit to file is being used.
-cd .. && make > /dev/null && cd scripts
+cd ..
+make > /dev/null 2> /dev/null 
+make_res=$?
+cd scripts
+
+if [ $make_res != 0 ]; then
+	echo ""
+	echo " Error: make command was unsuccessful. Execute make for error message."
+	echo "        (Aborting script)"
+	echo ""
+	exit 3
+fi
 
 # Test for every .pl0 extension in the tests directory
 for i in ../../syllabus/project/tests/*.pl0;
@@ -141,7 +152,7 @@ do
 	fi
 done
 
-# remove test.ast after running all testcases
+# remove testing files after running all testcases
 rm test.ast test.err
 
 
