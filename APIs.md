@@ -1,7 +1,8 @@
 # APIs
-Use this to find which file a function or struct is written in.
+Use this to find which file a function or struct is written in
 
 ## AST
+Functions and structs related to creating and printing an abstract syntax tree
 
 ### ast.c
 
@@ -79,6 +80,7 @@ Use this to find which file a function or struct is written in.
 
 
 ## Datatype
+Functions and structs related to storing datatype information for a variable, function, or factor
 
 ### datatype.c
 
@@ -104,6 +106,7 @@ Use this to find which file a function or struct is written in.
     
 
 ## Parser
+Functions for turning tokens into an AST
 
 ### parser.c
 
@@ -136,6 +139,7 @@ Use this to find which file a function or struct is written in.
 
 
 ## SymTab
+Functions and structs related to creating and storing the scope and symbols for syntactic components 
 
 ### symtab.c
 
@@ -160,6 +164,7 @@ Use this to find which file a function or struct is written in.
 
 
 ## Token
+Functions for converting source code into tokens
 
 ### token.c
 
@@ -179,6 +184,7 @@ Use this to find which file a function or struct is written in.
 
 
 ## Typechecker
+Functions for verifying the type matching of an existing AST
 
 ### typechecker.c
 
