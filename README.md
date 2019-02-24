@@ -17,4 +17,6 @@ other scripts are added.
 The `test-err.sh` script can be used to test the [type_error() testing files](https://piazza.com/class/jqidj3mhs91lo?cid=128) uploaded to Piazza. 
 The `err` folder should be extracted and placed inside of your `project-<username>` folder to run this script.
 
+**NOTE**: If you are using the pre-compiled files from binaries.tar, comment out the `make` command in the scripts (found in the "Compile and run test cases" sections).
+
 If you come across any bugs, please report them to this repo. 
