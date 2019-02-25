@@ -46,7 +46,7 @@ fi
 
 PASS_CNT=0
 NUM_TEST_CASES=3
-SCRIPTS=(lexer parser typecheck)
+SCRIPTS=(lex pars typecheck)
 
 # used for right-alignment
 col=27
@@ -95,7 +95,7 @@ echo ""
 
 for i in ${SCRIPTS[@]}; do
 	printf '  [Script] Running test-%s.sh...\t' "$i" | expand -t $col
-	bash test-$i.sh > /dev/null
+	bash test-${i}er.sh > /dev/null
 	compile_val=$?
 	
 	if [ $compile_val == 3 ]; then
