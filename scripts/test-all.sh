@@ -107,7 +107,7 @@ for i in ${SCRIPTS[@]}; do
 	elif [ $compile_val == 2 ]; then
 		echo "fail (misplaced file)"
 		echo ""
-		echo " Error: test-${i}.sh failed because of a misplaced file. Try running"
+		echo " Error: test-${i}er.sh failed because of a misplaced file. Try running"
 		echo "        that script separately. (Aborting)"
 		echo ""
 		exit
