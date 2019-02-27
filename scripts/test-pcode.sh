@@ -126,53 +126,54 @@ do
 		continue
 	fi
 	
-	../vm test.pcode > test.vmout 2> test.vmtrace
-	vm_val=$?
-	
-	if [ $vm_val != 0 ]; then
-		echo "fail (bad pcode)"
-	fi
-
 	# Remove extension from filename
 	sample_file="${filename%.*}"
-
-	# Run diff and capture return val
+	
+	# Fail if pcode is not what's expected
 	diff test.pcode ../../syllabus/project/tests/$sample_file.pcode > /dev/null
 	pcode_diff=$?
+	if [ $pcode_diff != 0 ]; then
+		echo "fail (pcode mismatch)"
+		continue
+	fi
 	
+	# Run VM with the pcode as input
+	../vm test.pcode > test.vmout 2> test.vmtrace
+	vm_val=$?
+	if [ $vm_val != 0 ]; then
+		echo "fail (vm failed)"
+		continue
+	fi
+
 	# TODO: Not sure how to handle stderr output when generating pcode
 	# diff test.err ../../syllabus/project/tests/$sample_file.types > /dev/null
 	# diff_val2=$?
 	
+	# Test for vmout and vmtrace mismatch
 	diff test.vmout ../../syllabus/project/tests/$sample_file.vmout > /dev/null
 	vmout_diff=$?
+	
+	if [ $vmout_diff != 0 ]; then
+		echo "fail (vmout mismatch)"
+		continue
+	fi
 	
 	diff test.vmtrace ../../syllabus/project/tests/$sample_file.vmtrace > /dev/null
 	vmtrace_diff=$?
 	
-	# Failed to compile (crashed, wrong error, or caught error)
-	if [ $compile_val != 0 ]; then
-		if [ -s test.types ] && [ -s test.err ]; then
-			echo "fail (program crashed)"
-		elif [ $diff_val2 != 0 ]; then
-			echo "fail (wrong error)"
-		else
-			echo "PASS! (caught error)"
-			PASS_CNT=`expr $PASS_CNT + 1`
-		fi
-	# Compiled (wrong tree or passed)
-	else 
-		if [ $diff_val1 != 0 ]; then 
-			echo "fail (bad tree)"
-		else
-			echo "PASS!"
-			PASS_CNT=`expr $PASS_CNT + 1`
-		fi
+	if [ $vmtrace_diff != 0 ]; then
+		echo "fail (vmtrace mismatch)"
+		continue
 	fi
+	
+	# All outputs are good if we reach here
+	echo "PASS!"
+	PASS_CNT=`expr $PASS_CNT + 1`
+	
 done
 
 # remove testing files after running all testcases
-rm test.types test.err
+rm test.pcode test.err test.vmout test.vmtrace
 
 
 ################################################################################
