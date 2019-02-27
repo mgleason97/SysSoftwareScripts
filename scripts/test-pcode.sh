@@ -138,8 +138,15 @@ do
 	fi
 	
 	# Run VM with the pcode as input
-	../vm test.pcode > test.vmout 2> test.vmtrace
-	vm_val=$?
+	
+	if [ -f ../../syllabus/project/tests/$sample_file.vmin ]; then
+		../vm test.pcode < ../../syllabus/project/tests/$sample_file.vmin > test.vmout 2> test.vmtrace
+		vm_val=$?
+	else
+		../vm test.pcode > test.vmout 2> test.vmtrace
+		vm_val=$?
+	fi
+	
 	if [ $vm_val != 0 ]; then
 		echo "fail (vm failed)"
 		continue
