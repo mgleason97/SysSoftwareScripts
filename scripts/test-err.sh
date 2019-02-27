@@ -115,18 +115,18 @@ do
 	[ -f "$i" ] || break
 
 	# Extract filename from path and print
-	filename=$(basename -- "$i")
+	filename=$(basename -- "${i%.*}")
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
 	# Attempt compilation and check for failure
 	../compiler --typecheck $i > test.err 2> test.err
 	compile_val=$?
 
-	# Remove extension from filename
-	sample_file="${filename%.*}"
+	# Remove extension from path
+	sample_file="${i%.*}"
 
 	# Run diff and capture return val
-	diff test.err ../err/$sample_file.err > /dev/null
+	diff test.err $sample_file.err > /dev/null
 	diff_val=$?
 	
 	# Produce resulting messages
