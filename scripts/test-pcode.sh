@@ -114,33 +114,48 @@ do
 	[ -f "$i" ] || break
 
 	# Extract filename from path and print
-	filename=$(basename -- "$i")
+	filename=$(basename -- "${i%.*}")
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
+	
+	# Remove extension from path
+	sample_file="${i%.*}"
+	
+	
+	### Compile .pl0 into pcode ###
 
-	# Attempt compilation and store compilation val
 	../compiler $i > test.pcode 2> test.err
 	compile_val=$?
 	
-	if [ $compile_val != 0 ]; then
+	# Catch if error in parser or typechecker
+	diff test.err $sample_file.ast > /dev/null
+	ast_err=$?
+	
+	diff test.err $sample_file.types > /dev/null
+	types_err=$?
+	
+	if [ $ast_err == 0 ] || [ $types_err == 0 ]; then
+		echo "PASS! (caught error)"
+		PASS_CNT=`expr $PASS_CNT + 1`
+		continue
+	elif [ $compile_val != 0 ]; then
 		echo "fail (could not compile)"
 		continue
 	fi
 	
-	# Remove extension from filename
-	sample_file="${filename%.*}"
-	
 	# Fail if pcode is not what's expected
-	diff test.pcode ../../syllabus/project/tests/$sample_file.pcode > /dev/null
+	diff test.pcode $sample_file.pcode > /dev/null
 	pcode_diff=$?
 	if [ $pcode_diff != 0 ]; then
 		echo "fail (pcode mismatch)"
 		continue
 	fi
 	
-	# Run VM with the pcode as input
 	
-	if [ -f ../../syllabus/project/tests/$sample_file.vmin ]; then
-		../vm test.pcode < ../../syllabus/project/tests/$sample_file.vmin > test.vmout 2> test.vmtrace
+	### Run VM with the pcode as input ###
+	
+	# Pipe in vmin if applicable
+	if [ -f $sample_file.vmin ]; then
+		../vm test.pcode < $sample_file.vmin > test.vmout 2> test.vmtrace
 		vm_val=$?
 	else
 		../vm test.pcode > test.vmout 2> test.vmtrace
@@ -151,13 +166,9 @@ do
 		echo "fail (vm failed)"
 		continue
 	fi
-
-	# TODO: Not sure how to handle stderr output when generating pcode
-	# diff test.err ../../syllabus/project/tests/$sample_file.types > /dev/null
-	# diff_val2=$?
 	
 	# Test for vmout and vmtrace mismatch
-	diff test.vmout ../../syllabus/project/tests/$sample_file.vmout > /dev/null
+	diff test.vmout $sample_file.vmout > /dev/null
 	vmout_diff=$?
 	
 	if [ $vmout_diff != 0 ]; then
@@ -165,7 +176,7 @@ do
 		continue
 	fi
 	
-	diff test.vmtrace ../../syllabus/project/tests/$sample_file.vmtrace > /dev/null
+	diff test.vmtrace $sample_file.vmtrace > /dev/null
 	vmtrace_diff=$?
 	
 	if [ $vmtrace_diff != 0 ]; then
@@ -179,8 +190,8 @@ do
 	
 done
 
-# remove testing files after running all testcases
-rm test.pcode test.err test.vmout test.vmtrace
+# Remove test files
+rm test.*
 
 
 ################################################################################
