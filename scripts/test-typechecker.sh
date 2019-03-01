@@ -114,7 +114,9 @@ do
 	[ -f "$i" ] || break
 
 	# Extract filename from path and print
+
 	filename=$(basename -- "${i%.*}")
+
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
 	# Attempt compilation and store compilation val
@@ -129,6 +131,7 @@ do
 	diff_val1=$?
 	
 	diff test.err $sample_file.types > /dev/null
+
 	diff_val2=$?
 	
 	# Failed to compile (crashed, wrong error, or caught error)
