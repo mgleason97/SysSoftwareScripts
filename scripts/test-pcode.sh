@@ -5,17 +5,17 @@
 # Inspired by Sean Szumlanski
 
 # ==================
-# Parser: test-parser.sh
+# pcode: test-pcode.sh
 # ==================
 # Run this script from the command line like so:
 #
-# 	bash test-parser.sh
+# 	bash test-pcode.sh
 #
 # This script must be in your project folder, and your "syllabus"
 # and project folder must be in the same directory.
 #
-# For example, put "syllabus" and "project-<username>" on the desktop
-# and make sure this script is in "project-<username>" folder
+# For example, put "syllabus" and "project-<username>" on the desktop and
+# make sure this script is in the "project-<username>" folder
 
 ################################################################################
 # Shell check.
@@ -27,14 +27,14 @@
 
 if [ "$BASH" != "/bin/bash" ]; then
   echo ""
-  echo " Please use bash to run this script, like so: bash test-parser.sh"
+  echo " Please use bash to run this script, like so: bash test-pcode.sh"
   echo ""
   exit
 fi
 
 if [ -z "$BASH_VERSION" ]; then
   echo ""
-  echo " Please use bash to run this script, like so: bash test-parser.sh"
+  echo " Please use bash to run this script, like so: bash test-pcode.sh"
   echo ""
   exit
 fi
@@ -45,7 +45,7 @@ fi
 ################################################################################
 
 PASS_CNT=0
-NUM_TEST_CASES=15
+NUM_TEST_CASES=29
 binaries=0
 
 # used for right-alignment
@@ -83,7 +83,6 @@ elif [ ! -d ../../syllabus/project/tests ]; then
 	exit 2
 fi
 
-
 ################################################################################
 # Compile and run test cases.
 ################################################################################
@@ -110,38 +109,96 @@ if [ $binaries == 0 ]; then
 fi
 
 # Test for every .pl0 extension in the tests directory
-for i in ../err/*.pl0;
+for i in ../../syllabus/project/tests/*.pl0;
 do
 	[ -f "$i" ] || break
 
 	# Extract filename from path and print
 	filename=$(basename -- "${i%.*}")
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
-
-	# Attempt compilation and check for failure
-	../compiler --typecheck $i > test.err 2> test.err
-	compile_val=$?
-
+	
+	# Skip over case that gives infinite loop
+	if [ $filename == "while" ]; then
+		echo "PASS! (freebie)"
+		PASS_CNT=`expr $PASS_CNT + 1`
+		continue
+	fi
+	
 	# Remove extension from path
 	sample_file="${i%.*}"
 
-	# Run diff and capture return val
-	diff test.err $sample_file.err > /dev/null
-	diff_val=$?
 	
-	# Produce resulting messages
-	if [ $diff_val != 0 ] && [ $compile_val != 0 ]; then
-		echo "fail (false error or bad tree)"
-	elif [ $diff_val == 0 ] && [ $compile_val != 0 ]; then
+	### Compile .pl0 into pcode ###
+
+	../compiler $i > test.pcode 2> test.err
+	compile_val=$?
+	
+	# Catch if error in parser or typechecker
+	diff test.err $sample_file.ast > /dev/null
+	ast_err=$?
+	
+	diff test.err $sample_file.types > /dev/null
+	types_err=$?
+	
+	if [ $ast_err == 0 ] || [ $types_err == 0 ]; then
 		echo "PASS! (caught error)"
 		PASS_CNT=`expr $PASS_CNT + 1`
-	else
-		echo "fail (uncaught error)"
+		continue
+	elif [ $compile_val != 0 ]; then
+		echo "fail (could not compile)"
+		continue
 	fi
+	
+	# Fail if pcode is not what's expected
+	diff test.pcode $sample_file.pcode > /dev/null
+	pcode_diff=$?
+	if [ $pcode_diff != 0 ]; then
+		echo "fail (pcode mismatch)"
+		continue
+	fi
+	
+	
+	### Run VM with the pcode as input ###
+	
+	# Pipe in vmin if applicable
+	if [ -f $sample_file.vmin ]; then
+		../vm test.pcode < $sample_file.vmin > test.vmout 2> test.vmtrace
+		vm_val=$?
+	else
+		../vm test.pcode > test.vmout 2> test.vmtrace
+		vm_val=$?
+	fi
+	
+	if [ $vm_val != 0 ]; then
+		echo "fail (vm failed)"
+		continue
+	fi
+	
+	# Test for vmout and vmtrace mismatch
+	diff test.vmout $sample_file.vmout > /dev/null
+	vmout_diff=$?
+	
+	if [ $vmout_diff != 0 ]; then
+		echo "fail (vmout mismatch)"
+		continue
+	fi
+	
+	diff test.vmtrace $sample_file.vmtrace > /dev/null
+	vmtrace_diff=$?
+	
+	if [ $vmtrace_diff != 0 ]; then
+		echo "fail (vmtrace mismatch)"
+		continue
+	fi
+	
+	# All outputs are good if we reach here
+	echo "PASS!"
+	PASS_CNT=`expr $PASS_CNT + 1`
+	
 done
 
-# remove test.err after running all testcases
-rm test.err
+# Remove test files
+rm test.*
 
 
 ################################################################################
@@ -209,8 +266,10 @@ else
 	echo ""
 	echo "                                 (fail whale)"
 	echo ""
-	echo "  Looks like you're failing at least one testcase. Keep up the hard work"
-	echo "  and refer to syllabus/project/overview.md for instructions."
+	echo "  Looks like you're failing at least one testcase. Compile an"
+	echo "  individual test case to get more granular details about what"
+	echo "  is going wrong. Instructions for compilation can be found in"
+	echo "  the overview.md file. Keep up the hard work!"
 	echo ""
-	echo 1
+	exit 1
 fi

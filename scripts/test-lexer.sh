@@ -115,7 +115,7 @@ do
 	[ -f "$i" ] || break
 
 	# Extract filename from path and print
-	filename=$(basename -- "$i")
+	filename=$(basename -- "${i%.*}")
 	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
 	# Attempt compilation and check for failure
@@ -126,11 +126,11 @@ do
 		continue
 	fi
 
-	# Remove extension from filename
-	sample_file="${filename%.*}"
+	# Remove extension from path
+	sample_file="${i%.*}"
 
 	# Run diff and capture return val
-	diff test.tokens ../../syllabus/project/tests/$sample_file.tokens > /dev/null
+	diff test.tokens $sample_file.tokens > /dev/null
 	diff_val=$?
 	if [ $diff_val != 0 ]; then
 		echo "fail (output mismatch)"
