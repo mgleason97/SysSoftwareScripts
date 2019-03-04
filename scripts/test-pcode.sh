@@ -126,51 +126,27 @@ do
 	
 	# Remove extension from path
 	sample_file="${i%.*}"
-
-	
-	### Compile .pl0 into pcode ###
-
-	../compiler $i > test.pcode 2> test.err
-	compile_val=$?
-	
-	# Catch if error in parser or typechecker
-	diff test.err $sample_file.ast > /dev/null
-	ast_err=$?
-	
-	diff test.err $sample_file.types > /dev/null
-	types_err=$?
-	
-	if [ $ast_err == 0 ] || [ $types_err == 0 ]; then
-		echo "PASS! (caught error)"
-		PASS_CNT=`expr $PASS_CNT + 1`
-		continue
-	elif [ $compile_val != 0 ]; then
-		echo "fail (could not compile)"
-		continue
-	fi
-	
-	# Fail if pcode is not what's expected
-	diff test.pcode $sample_file.pcode > /dev/null
-	pcode_diff=$?
-	if [ $pcode_diff != 0 ]; then
-		echo "fail (pcode mismatch)"
-		continue
-	fi
 	
 	
 	### Run VM with the pcode as input ###
 	
 	# Pipe in vmin if applicable
 	if [ -f $sample_file.vmin ]; then
-		../vm test.pcode < $sample_file.vmin > test.vmout 2> test.vmtrace
+		../vm $sample_file.pcode < $sample_file.vmin > test.vmout 2> test.vmtrace
 		vm_val=$?
 	else
-		../vm test.pcode > test.vmout 2> test.vmtrace
+		../vm $sample_file.pcode > test.vmout 2> test.vmtrace
 		vm_val=$?
 	fi
 	
 	if [ $vm_val != 0 ]; then
-		echo "fail (vm failed)"
+		# These will not compile and throw an error to the corresponding pcode file
+		if [ $filename == "bad_type" ] || [ $filename == "spacing" ] || [ $filename == "undef_var" ]; then
+			echo "(expected to fail)"
+			PASS_CNT=`expr $PASS_CNT + 1`
+		else
+			echo "fail (vm failed)"
+		fi
 		continue
 	fi
 	
