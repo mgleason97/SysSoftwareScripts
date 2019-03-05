@@ -79,6 +79,78 @@ Functions and structs related to creating and printing an abstract syntax tree
     struct ExpressionListElement {};
 
 
+## Codegen
+Functions and structs related to generating pcode from a Typed Abstract Syntax Tree
+
+### codegen.c
+
+    // declarations
+    static void visitTranslationUnit(struct TranslationUnit *node) {}
+    static void visitBlock(struct Block *node) {}
+    static void visitVarDecls(struct TypedIdentList *list) {}
+    static void visitFuncDecls(struct FuncDeclList *list) {}
+    static void visitFuncDecl(struct FuncDecl *node) {}
+    static void visitFormals(struct TypedIdentList *list) {}
+
+    // statements
+    static void visitStatement(struct Statement *node) {}
+    static void visitAssignStatement(struct Statement *node) {}
+    static void visitCallStatement(struct Statement *node) {}
+    static void visitReturnStatement(struct Statement *node) {}
+    static void visitCompoundStatement(struct Statement *list) {}
+    static void visitIfStatement(struct Statement *node) {}
+    static void visitWhileStatement(struct Statement *node) {}
+    static void visitReadStatement(struct Statement *node) {}
+    static void visitWriteStatement(struct Statement *node) {}
+
+    // expressions
+    static int visitExpression(struct Expression *node, int reg_base) {}
+    static int visitBinaryExpressionInt(struct Expression *node, int reg_base) {}
+    static int visitUnaryExpressionInt(struct Expression *node, int reg_base) {}
+    static int visitBinaryExpressionBool(struct Expression *node, int reg_base) {}
+    static int visitUnaryExpressionBool(struct Expression *node, int reg_base) {}
+    static int visitNumberFactor(struct Expression *node, int reg_base) {}
+    static int visitBooleanFactor(struct Expression *node, int reg_base) {}
+    static int visitVariableFactor(struct Expression *node, int reg_base) {}
+    static int visitFunctionFactor(struct Expression *node, int reg_base) {}
+
+    // common functions for statements and expressions
+    static void setVariable(struct Symbol *symbol, int reg) {}
+    static void setupFunctionCall(struct Symbol *fsymbol, struct ExpressionList *parameters, int reg) {}
+
+    // helper functions for emitting ops
+    static int emit(Instruction instr) {}
+    static void backpatch(int branch_instruction_address, int new_disp) {}
+    
+    // definitions
+    #define FP 12
+    #define SP 13
+    #define LN 14
+    #define IP 15
+
+    #define OFFSET_FIRST_PARAM -4
+    #define OFFSET_RET_VAL -3
+    #define OFFSET_STATIC_LINK -2
+    #define OFFSET_RET_ADDR -1
+    #define OFFSET_FIRST_LOCAL
+
+### codegen.h
+
+    void codegen(struct TranslationUnit *node);
+    void print_pcode(FILE *fp);
+
+### codegen_instr.h
+    
+    // macros for each VM intruction
+    #define VM_*
+
+### codegen_tools.c
+
+    void print_instruction(FILE *fp, Instruction instruction) {}
+    void print_pcode(FILE *fp) {}
+    char *register_name(int reg) {}
+    
+
 ## Datatype
 Functions and structs related to storing datatype information for a variable, function, or factor
 
