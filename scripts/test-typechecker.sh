@@ -18,6 +18,15 @@
 # make sure this script is in the "project-<username>" folder
 
 ################################################################################
+# User Specifications.
+################################################################################
+
+# Set to 1 (true) or 0 (false) as needed
+using_binaries=0
+include_grading_cases=0
+
+
+################################################################################
 # Shell check.
 ################################################################################
 
@@ -45,8 +54,13 @@ fi
 ################################################################################
 
 PASS_CNT=0
-NUM_TEST_CASES=29
-binaries=0
+TOTAL_CASES=29
+NUM_GRADING_CASES=12
+
+# Add additional cases to total count
+if [ $include_grading_cases == 1 ]; then
+	TOTAL_CASES=`expr $TOTAL_CASES + $NUM_GRADING_CASES`
+fi
 
 # used for right-alignment
 col=27
@@ -87,14 +101,8 @@ fi
 # Compile and run test cases.
 ################################################################################
 
-echo ""
-echo "============================================================================="
-echo "Running test cases..."
-echo "============================================================================="
-echo ""
-
 # Make sure latest edit to file is being used.
-if [ $binaries == 0 ]; then
+if [ $using_binaries == 0 ]; then
 	cd .. && make > /dev/null 2> /dev/null
 	make_res=$?
 	cd scripts
@@ -108,55 +116,79 @@ if [ $binaries == 0 ]; then
 	fi
 fi
 
-# Test for every .pl0 extension in the tests directory
-for i in ../../syllabus/project/tests/*.pl0;
-do
-	[ -f "$i" ] || break
+# Test for every .pl0 extension in the current directory
+run () {
+	for i in $path/*.pl0;
+	do
+		[ -f "$i" ] || break
 
-	# Extract filename from path and print
+		# Extract filename from path and print
 
-	filename=$(basename -- "${i%.*}")
+		filename=$(basename -- "${i%.*}")
 
-	printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
+		printf '  [Test Case] Checking %s...\t' "$filename" | expand -t $col
 
-	# Attempt compilation and store compilation val
-	../compiler --typecheck $i > test.types 2> test.err
-	compile_val=$?
+		# Attempt compilation and store compilation val
+		../compiler --typecheck $i > test.types 2> test.err
+		compile_val=$?
 
-	# Remove extension from path
-	sample_file="${i%.*}"
+		# Remove extension from path
+		sample_file="${i%.*}"
 
-	# Run diff and capture return val
-	diff test.types $sample_file.types > /dev/null
-	diff_val1=$?
-	
-	diff test.err $sample_file.types > /dev/null
+		# Run diff and capture return val
+		diff test.types $sample_file.types > /dev/null
+		diff_val1=$?
+		
+		diff test.err $sample_file.types > /dev/null
 
-	diff_val2=$?
-	
-	# Failed to compile (crashed, wrong error, or caught error)
-	if [ $compile_val != 0 ]; then
-		if [ -s test.types ] && [ -s test.err ]; then
-			echo "fail (program crashed)"
-		elif [ $diff_val2 != 0 ]; then
-			echo "fail (wrong error)"
-		else
-			echo "PASS! (caught error)"
-			PASS_CNT=`expr $PASS_CNT + 1`
+		diff_val2=$?
+		
+		# Failed to compile (crashed, wrong error, or caught error)
+		if [ $compile_val != 0 ]; then
+			if [ -s test.types ] && [ -s test.err ]; then
+				echo "fail (program crashed)"
+			elif [ $diff_val2 != 0 ]; then
+				echo "fail (wrong error)"
+			else
+				echo "PASS! (caught error)"
+				PASS_CNT=`expr $PASS_CNT + 1`
+			fi
+		# Compiled (wrong tree or passed)
+		else 
+			if [ $diff_val1 != 0 ]; then 
+				echo "fail (bad tree)"
+			else
+				echo "PASS!"
+				PASS_CNT=`expr $PASS_CNT + 1`
+			fi
 		fi
-	# Compiled (wrong tree or passed)
-	else 
-		if [ $diff_val1 != 0 ]; then 
-			echo "fail (bad tree)"
-		else
-			echo "PASS!"
-			PASS_CNT=`expr $PASS_CNT + 1`
-		fi
-	fi
-done
+	done
 
-# remove testing files after running all testcases
-rm test.*
+	# remove testing files after running all testcases
+	rm test.*
+}
+
+# Test the given testcases
+echo ""
+echo "============================================================================="
+echo "Running given cases..."
+echo "============================================================================="
+echo ""
+
+path=../../syllabus/project/tests
+run
+
+# Test cases used for grading if required
+if [ $include_grading_cases == 1 ]; then
+	echo ""
+	echo "============================================================================="
+	echo "Running grading cases..."
+	echo "============================================================================="
+	echo ""
+
+	path=../../syllabus/project/tests/project3
+	run
+fi
 
 
 ################################################################################
@@ -168,7 +200,7 @@ echo "==========================================================================
 echo "Final Report"
 echo "============================================================================="
 
-if [ $PASS_CNT -eq $NUM_TEST_CASES ]; then
+if [ $PASS_CNT -eq $TOTAL_CASES ]; then
 	echo ""
 	echo "                       ,"
 	echo "                       \\\`-._           __"
