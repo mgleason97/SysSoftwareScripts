@@ -23,7 +23,7 @@
 
 # Set to 1 (true) or 0 (false) as needed
 using_binaries=0
-include_grading_cases=0
+include_grading_cases=1
 
 
 ################################################################################
@@ -193,7 +193,7 @@ if [ $include_grading_cases == 1 ]; then
 
 	path=../../syllabus/project/tests/project5
 	#run
-	echo "oops, these files aren't out yet or I haven't updated the script."
+	echo "WIP, sorry kiddos"
 	TOTAL_CASES=`expr $TOTAL_CASES - $NUM_GRADING_CASES`
 fi
 
