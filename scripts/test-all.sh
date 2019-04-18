@@ -45,8 +45,8 @@ fi
 ################################################################################
 
 PASS_CNT=0
-NUM_TEST_CASES=5
 SCRIPTS=(lexer parser typechecker pcode codegen)
+NUM_TEST_CASES=${#SCRIPTS[@]}
 
 # used for right-alignment
 col=27
